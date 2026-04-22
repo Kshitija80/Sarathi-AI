@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarathi AI - Profile Settings</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .profile-container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+        .header h2 { margin: 0; }
+        .back-btn {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.6);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--accent);
+        }
+        .save-btn {
+            width: 100%;
+            padding: 15px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        #status-msg {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-container">
+        <div class="header">
+            <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+            <h2>Update Profile</h2>
+        </div>
+
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="prof-name" placeholder="Your Name">
+        </div>
+        
+        <div class="form-group">
+            <label>Persona / Role</label>
+            <select id="prof-role">
+                <option value="farmer">Farmer (शेतकरी)</option>
+                <option value="student">Student (विद्यार्थी)</option>
+                <option value="worker">Worker (कामगार)</option>
+                <option value="general">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Audio Voice Language</label>
+            <select id="prof-lang">
+                <option value="mr-IN">Marathi (मराठी)</option>
+                <option value="hi-IN">Hindi (हिंदी)</option>
+                <option value="en-US">English</option>
+            </select>
+        </div>
+
+        <button class="save-btn" id="save-btn">Save Changes</button>
+        <div id="status-msg"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+        const nameEl = document.getElementById("prof-name");
+        const roleEl = document.getElementById("prof-role");
+        const langEl = document.getElementById("prof-lang");
+        const saveBtn = document.getElementById("save-btn");
+        const statusMsg = document.getElementById("status-msg");
+
+        // Load initially from local storage for fast render
+        nameEl.value = localStorage.getItem("sarathi_user_name") || "";
+        roleEl.value = localStorage.getItem("sarathi_user_role") || "general";
+        langEl.value = localStorage.getItem("sarathi_user_lang") || "en-US";
+
+        let currentUserId = null;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                // Fetch latest from DB to be safe
+                const docSnap = await getDoc(doc(db, "users", user.uid));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    nameEl.value = data.name || "";
+                    roleEl.value = data.role || "general";
+                    langEl.value = data.language || "en-US";
+                }
+            }
+        });
+
+        saveBtn.addEventListener("click", async () => {
+            if (!currentUserId) return;
+            
+            saveBtn.textContent = "Saving...";
+            try {
+                await updateDoc(doc(db, "users", currentUserId), {
+                    name: nameEl.value,
+                    role: roleEl.value,
+                    language: langEl.value
+                });
+                
+                // Update local storage
+                localStorage.setItem("sarathi_user_name", nameEl.value);
+                localStorage.setItem("sarathi_user_role", roleEl.value);
+                localStorage.setItem("sarathi_user_lang", langEl.value);
+                
+                statusMsg.textContent = "✅ Profile updated successfully!";
+                statusMsg.style.color = "#10b981";
+                statusMsg.style.display = "block";
+            } catch (err) {
+                console.error(err);
+                statusMsg.textContent = "❌ Failed to save. Check rules.";
+                statusMsg.style.color = "#ef4444";
+                statusMsg.style.display = "block";
+            }
+            saveBtn.textContent = "Save Changes";
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 3000);
+        });
+    </script>
+</body>
+</html>

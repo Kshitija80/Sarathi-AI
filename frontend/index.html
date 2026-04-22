@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarathi AI - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .auth-container {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+        }
+        .auth-container h1 {
+            text-align: center;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .auth-container p.subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.5);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4);
+        }
+        .toggle-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .toggle-text span {
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #signup-fields { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h1>Sarathi AI</h1>
+        <p class="subtitle" id="form-subtitle">Login to your account</p>
+
+        <div id="error-message" style="color: #ef4444; font-size: 0.85rem; margin-bottom: 15px; text-align: center; display: none;"></div>
+
+        <div class="input-group">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="farmer@example.com" required>
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+
+        <!-- Extra fields for Signup -->
+        <div id="signup-fields">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" id="name" placeholder="Ramesh Patel">
+            </div>
+            
+            <div class="input-group">
+                <label>Your Role</label>
+                <select id="role">
+                    <option value="farmer">Farmer (शेतकरी)</option>
+                    <option value="student">Student (विद्यार्थी)</option>
+                    <option value="worker">Worker (कामगार)</option>
+                    <option value="general">Other</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Preferred Language</label>
+                <select id="language">
+                    <option value="mr-IN">Marathi (मराठी)</option>
+                    <option value="hi-IN">Hindi (हिंदी)</option>
+                    <option value="en-US">English</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="auth-btn" id="submit-btn" aria-live="polite">Log In</button>
+
+        <p class="toggle-text">
+            <span id="toggle-form-btn">Targetting: Create a new account</span>
+        </p>
+    </div>
+
+    <!-- Include Firebase configuration as a module -->
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+        let isLogin = true;
+
+        const emailEl = document.getElementById("email");
+        const passwordEl = document.getElementById("password");
+        const nameEl = document.getElementById("name");
+        const roleEl = document.getElementById("role");
+        const langEl = document.getElementById("language");
+        
+        const submitBtn = document.getElementById("submit-btn");
+        const toggleBtn = document.getElementById("toggle-form-btn");
+        const signupFields = document.getElementById("signup-fields");
+        const formSubtitle = document.getElementById("form-subtitle");
+        const errorEl = document.getElementById("error-message");
+
+        toggleBtn.addEventListener("click", () => {
+            isLogin = !isLogin;
+            errorEl.style.display = 'none';
+
+            if (isLogin) {
+                signupFields.style.display = "none";
+                submitBtn.textContent = "Log In";
+                formSubtitle.textContent = "Login to your account";
+                toggleBtn.innerHTML = "Don't have an account? <span>Create one</span>";
+            } else {
+                signupFields.style.display = "block";
+                submitBtn.textContent = "Sign Up";
+                formSubtitle.textContent = "Create a new account";
+                toggleBtn.innerHTML = "Already have an account? <span>Log In</span>";
+            }
+        });
+
+        // Initialize literal
+        toggleBtn.innerHTML = "Don't have an account? <span>Create one</span>";
+
+        submitBtn.addEventListener("click", async () => {
+            const email = emailEl.value.trim();
+            const password = passwordEl.value.trim();
+
+            if (!email || !password) {
+                showError("Please enter email and password.");
+                return;
+            }
+
+            submitBtn.textContent = "Please wait...";
+            submitBtn.disabled = true;
+
+            try {
+                if (isLogin) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    // firebase-config.js will auto-redirect to dashboard
+                } else {
+                    const name = nameEl.value.trim();
+                    if (!name) throw new Error("Name is required for sign up.");
+
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // Save extended profile to Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        name: name,
+                        email: email,
+                        role: roleEl.value,
+                        language: langEl.value,
+                        createdAt: new Date().toISOString()
+                    });
+
+                    // firebase-config.js will route to dashboard
+                }
+            } catch (err) {
+                showError(err.message);
+                submitBtn.textContent = isLogin ? "Log In" : "Sign Up";
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = "block";
+        }
+    </script>
+</body>
+</html>

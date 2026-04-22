@@ -1,0 +1,20 @@
+{
+  "name": "sarathiai-backend",
+  "version": "1.0.0",
+  "description": "Express backend for SarathiAi using Gemini AI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/text-to-speech": "^6.4.0",
+    "@google/generative-ai": "^0.21.0",
+    "axios": "^1.14.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "firebase-admin": "^13.7.0",
+    "google-tts-api": "^2.0.2"
+  }
+}

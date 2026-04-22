@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarathi AI - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .dashboard-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+        .welcome-text h1 {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+        }
+        .welcome-text p {
+            color: var(--accent);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .logout-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: transform 0.3s, background 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(30, 41, 59, 0.9);
+            border-color: var(--accent);
+        }
+        .card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        .card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        @media (max-width: 500px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <div class="welcome-text">
+                <h1>Hello, <span id="user-name-display">...</span>!</h1>
+                <p><i class="fa-solid fa-user-tag"></i> <span id="user-role-display">Role</span> Profile</p>
+            </div>
+            <button class="logout-btn" onclick="window.logoutUser()">Logout <i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        </div>
+
+        <div class="grid">
+            <a href="chat.html" class="card">
+                <i class="fa-solid fa-message"></i>
+                <h2>Start Chat</h2>
+                <p>Talk to Sarathi AI now</p>
+            </a>
+            
+            <a href="history.html" class="card">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <h2>Chat History</h2>
+                <p>View your past conversations</p>
+            </a>
+
+            <a href="profile.html" class="card" style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px;">
+                <i class="fa-solid fa-gear" style="margin: 0; font-size: 2rem;"></i>
+                <div style="text-align: left;">
+                    <h2 style="margin: 0;">Settings & Profile</h2>
+                    <p>Change Language or Role</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import './firebase-config.js'; // This loads the auth listener
+
+        // Because firebase-config is async, we poll local storage to quickly show data
+        const loadProfile = () => {
+            const name = localStorage.getItem("sarathi_user_name");
+            const role = localStorage.getItem("sarathi_user_role");
+            if (name) document.getElementById("user-name-display").textContent = name;
+            if (role) document.getElementById("user-role-display").textContent = role;
+        };
+
+        // Try load immediately
+        loadProfile();
+        // Give firebase a second to fetch from DB if caching was empty
+        setTimeout(loadProfile, 1500);
+    </script>
+</body>
+</html>
